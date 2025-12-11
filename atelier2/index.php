@@ -1,9 +1,14 @@
 <?php
 session_start();
 
-// Vérifier si l'utilisateur est déjà connecté avec un cookie valide
+// Vérifier si l'utilisateur est déjà connecté
 if (isset($_COOKIE['authToken']) && isset($_SESSION['authToken']) && $_COOKIE['authToken'] === $_SESSION['authToken']) {
-    header('Location: page_admin.php');
+    // Redirection selon le rôle stocké en session
+    if ($_SESSION['role'] === 'admin') {
+        header('Location: page_admin.php');
+    } elseif ($_SESSION['role'] === 'user') {
+        header('Location: page_user.php');
+    }
     exit();
 }
 
@@ -12,23 +17,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // Vérification simple des identifiants
+    // Vérification des identifiants
     if ($username === 'admin' && $password === 'secret') {
+        $role = 'admin';
+    } elseif ($username === 'user' && $password === 'utilisateur') {
+        $role = 'user';
+    } else {
+        $error = "Nom d'utilisateur ou mot de passe incorrect.";
+    }
 
+    if (isset($role)) {
         // Générer un jeton unique
         $token = bin2hex(random_bytes(16));
 
-        // Stocker le token dans le cookie (valable 1 minute)
+        // Stocker dans le cookie (1 minute)
         setcookie('authToken', $token, time() + 60, '/', '', false, true);
 
-        // Stocker le token côté serveur pour validation
+        // Stocker le token et le rôle côté serveur
         $_SESSION['authToken'] = $token;
+        $_SESSION['role'] = $role;
 
-        // Redirection vers la page protégée
-        header('Location: page_admin.php');
+        // Redirection selon le rôle
+        if ($role === 'admin') {
+            header('Location: page_admin.php');
+        } elseif ($role === 'user') {
+            header('Location: page_user.php');
+        }
         exit();
-    } else {
-        $error = "Nom d'utilisateur ou mot de passe incorrect.";
     }
 }
 ?>
@@ -37,11 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion</title>
 </head>
 <body>
-    <h1>Atelier Authentification par Cookie</h1>
+    <h1>Connexion</h1>
     <?php if (isset($error)) echo "<p style='color:red;'>$error</p>"; ?>
     <form method="POST" action="">
         <label for="username">Nom d'utilisateur :</label>
