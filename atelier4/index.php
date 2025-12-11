@@ -1,28 +1,33 @@
 <?php
-// Nom d'utilisateur et mot de passe corrects
-$valid_username = 'admin';
-$valid_password = 'secret';
+// Liste des utilisateurs et mots de passe
+$users = [
+    'admin' => 'secret',
+    'user' => 'utilisateur'
+];
 
-// Vérifier si l'utilisateur a envoyé des identifiants
-if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])) {
-    // Envoyer un header HTTP pour demander les informations
+// Vérifier si le client a envoyé des identifiants
+if (!isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
     header('WWW-Authenticate: Basic realm="Zone Protégée"');
     header('HTTP/1.0 401 Unauthorized');
     echo 'Vous devez entrer un nom d\'utilisateur et un mot de passe pour accéder à cette page.';
     exit;
 }
 
-// Vérifier les identifiants envoyés
-if ($_SERVER['PHP_AUTH_USER'] !== $valid_username || $_SERVER['PHP_AUTH_PW'] !== $valid_password) {
-    // Si les identifiants sont incorrects
+// Récupérer les identifiants envoyés
+$username = $_SERVER['PHP_AUTH_USER'];
+$password = $_SERVER['PHP_AUTH_PW'];
+
+// Vérifier les identifiants
+if (!isset($users[$username]) || $users[$username] !== $password) {
     header('WWW-Authenticate: Basic realm="Zone Protégée"');
     header('HTTP/1.0 401 Unauthorized');
     echo 'Nom d\'utilisateur ou mot de passe incorrect.';
     exit;
 }
 
-// Si les identifiants sont corrects
+// À partir d’ici, l’utilisateur est authentifié
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -32,10 +37,16 @@ if ($_SERVER['PHP_AUTH_USER'] !== $valid_username || $_SERVER['PHP_AUTH_PW'] !==
 </head>
 <body>
     <h1>Bienvenue sur la page protégée</h1>
-    <p>Ceci est une page protégée par une authentification simple via le header HTTP</p>
-    <p>C'est le serveur qui vous demande un nom d'utilisateur et un mot de passe via le header WWW-Authenticate</p>
-    <p>Aucun système de session ou cookie n'est utilisé pour cet atelier</p>
-    <p>Vous êtes connecté en tant que : <?php echo htmlspecialchars($_SERVER['PHP_AUTH_USER']); ?></p>
-    <a href="../index.html">Retour à l'accueil</a>  
+    <p>Vous êtes connecté en tant que : <?php echo htmlspecialchars($username); ?></p>
+
+    <?php if ($username === 'admin'): ?>
+        <h2>Section réservée à l'admin</h2>
+        <p>Vous voyez ce contenu car vous êtes l'administrateur.</p>
+    <?php else: ?>
+        <h2>Section utilisateur</h2>
+        <p>Contenu limité pour les utilisateurs standard.</p>
+    <?php endif; ?>
+
+    <a href="../index.html">Retour à l'accueil</a>
 </body>
 </html>
