@@ -1,4 +1,4 @@
 AuthName "Accès protégé"
 AuthType Basic
-AuthUserFile /atelier1/.htpasswd
+AuthUserFile /home/houn/www/.htpasswd
 Require valid-user
